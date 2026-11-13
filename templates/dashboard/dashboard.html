@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Панель управления | Price Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/dashboard/dashboard.css">
+</head>
+<body>
+    <div class="header">
+        <h1>Управление отслеживанием</h1>
+        <nav>
+            <a href="/analytics">Аналитика →</a>
+            <a href="#" onclick="logout()" style="color: var(--text-muted);">Выйти</a>
+        </nav>
+    </div>
+
+    <div class="grid">
+        <div class="col-left">
+            <div class="card" style="margin-bottom: 24px;">
+                <h2>1. Создать группу</h2>
+                <div class="form-group">
+                    <label>Название группы (например, "Ноутбуки")</label>
+                    <input type="text" id="groupNameInput" placeholder="Введите название...">
+                </div>
+                <button onclick="createGroup()">Создать группу</button>
+            </div>
+
+            <div class="card">
+                <h2>2. Добавить URL в группу</h2>
+                <div class="form-group">
+                    <label>Выберите группу</label>
+                    <div class="custom-select" id="customSelect" onclick="toggleDropdown(event)">
+                        <span class="selected-text" id="selectedGroupText">Сначала создайте группу...</span>
+                        <span class="arrow">▼</span>
+                        <div class="dropdown-content" id="dropdownContent"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Ссылка на товар</label>
+                    <input type="url" id="urlInput" placeholder="https://www.wildberries.ru/catalog/...">
+                </div>
+                <button onclick="addUrl()">Добавить URL</button>
+            </div>
+        </div>
+
+        <div class="col-right">
+            <div class="card" style="height: 100%;">
+                <h2>Ваши группы и товары</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Группа</th>
+                            <th>URL товара</th>
+                            <th style="width: 100px; text-align: right;">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="urlsTableBody">
+                        <tr><td colspan="3" style="text-align:center; color:#94a3b8;">Загрузка...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/dashboard/dashboard.js"></script>
+</body>
+</html>

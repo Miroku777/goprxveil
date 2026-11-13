@@ -1,0 +1,52 @@
+# version: '3.8'
+services:
+  app:
+    build: .
+    container_name: goprxveil
+    ports:
+      - "8888:8888"
+    volumes:
+      - ozon_data:/root/.ozon-mcp-userdata
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_HOST=postgres
+    depends_on:
+      - postgres
+    restart: always
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      PGDATA: /var/lib/postgresql/data
+      TZ: "Europe/Moscow"
+      PGTZ: "Europe/Moscow"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_container
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: always
+
+volumes:
+  pgdata:
+  pgadmin_data:
+  ozon_data:

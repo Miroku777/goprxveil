@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход / Регистрация | Price Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Подключаем CSS -->
+    <link rel="stylesheet" href="/static/login/login.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Добро пожаловать</h2>
+        
+        <div class="tabs">
+            <button class="active" onclick="switchTab('login')">Вход</button>
+            <button onclick="switchTab('register')">Регистрация</button>
+        </div>
+        
+        <!-- Форма входа -->
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            <button type="submit">Войти</button>
+        </form>
+
+        <!-- Форма регистрации -->
+        <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Пароль" required>
+            <input type="password" name="confirm" placeholder="Повторите пароль" required>
+            <button type="submit">Зарегистрироваться</button>
+        </form>
+    </div>
+
+    <!-- Подключаем JS -->
+    <script src="/static/login/login.js"></script>
+</body>
+</html>
