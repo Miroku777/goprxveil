@@ -20,7 +20,6 @@ if (!token) window.location.href = '/login';
 
 const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
 
-// Универсальная функция для запросов с проверкой токена
 async function apiFetch(url, options = {}) {
     const res = await fetch(url, options);
     if (res.status === 401) {

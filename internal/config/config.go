@@ -38,8 +38,12 @@ func ConnectDB() (db *sql.DB, err error) {
 // GetOzonCookies launches a Chrome browser via go-rod, navigates to the specified URL,
 // waits for the page to load, and returns all cookies as a single semicolon-separated string.
 func GetOzonCookies(urlstr string) (string, error) {
+	browserPath := "/usr/bin/google-chrome"
+	if _, err := os.Stat(browserPath); os.IsNotExist(err) {
+		browserPath = "/usr/bin/chromium"
+	}
 	l := launcher.New().
-		Bin("/usr/bin/google-chrome").
+		Bin(browserPath).
 		UserDataDir("/tmp/chrome-profile-ozon").
 		Set("window-size", "1920,1080").
 		Headless(false).

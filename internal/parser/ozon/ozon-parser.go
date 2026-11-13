@@ -165,7 +165,9 @@ func (o *OzonPlaywright) GetPrice(productID string) (price int64, productName st
 	}
 
 	var data map[string]any
-	json.Unmarshal([]byte(jsonText), &data)
+	if err = json.Unmarshal([]byte(jsonText), &data); err != nil {
+		return 0, "", 0, "", err
+	}
 	widgetStates, _ := data["widgetStates"].(map[string]any)
 
 	var priceStr string
@@ -216,7 +218,10 @@ func (o *OzonPlaywright) GetPrice(productID string) (price int64, productName st
 
 	cleanPrice := regexp.MustCompile(`\D`).ReplaceAllString(priceStr, "")
 	price, err = strconv.ParseInt(cleanPrice, 10, 64)
-
+	if err != nil {
+		return 0, "", 0, "", err
+	}
+	price = price * 100
 	return price, productName, rating, description, nil
 }
 
@@ -252,12 +257,6 @@ func (o *OzonPlaywright) GetFullProductInfo(productID string) (price int64, name
 		return 0, "", 0, "", err
 	}
 
-	title, _ := o.page.Title()
-	fmt.Println("=== ОТЛАДКА OZON ===")
-	fmt.Println("TITLE:", title)
-	html, _ := o.page.Content()
-	os.WriteFile("/tmp/ozon.html", []byte(html), 0644)
-
 	time.Sleep(3 * time.Second) // waiting render
 	res, err := o.page.Evaluate(`() => document.querySelector('script[type="application/ld+json"]')?.innerText || ""`)
 	if err != nil || res == nil {
@@ -281,9 +280,15 @@ func (o *OzonPlaywright) GetFullProductInfo(productID string) (price int64, name
 	}
 
 	cleanPrice := regexp.MustCompile(`\D`).ReplaceAllString(data.Offers.Price, "")
-	price, _ = strconv.ParseInt(cleanPrice, 10, 64)
-	rating, _ = strconv.ParseFloat(data.Rating.Value, 64)
-
+	price, err = strconv.ParseInt(cleanPrice, 10, 64)
+	if err != nil {
+		return 0, "", 0, "", err
+	}
+	price = price * 100
+	rating, err = strconv.ParseFloat(data.Rating.Value, 64)
+	if err != nil {
+		return 0, "", 0, "", err
+	}
 	return price, data.Name, rating, data.Description, nil
 }
 
