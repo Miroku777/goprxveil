@@ -1,78 +1,89 @@
 goprxveil
-Назначение: Программное обеспечение для автоматизированного мониторинга, сбора и анализа цен на товары маркетплейсов (Ozon, Wildberries).
 
-### 1. Описание программы
-Программа представляет собой веб-сервис, состоящий из парсера (краулера) и панели аналитики. Обеспечивает фоновое обновление цен по заданным URL и предоставляет интерфейс для визуализации истории цен, отслеживания минимальных/максимальных значений и получения данных о продавцах.
+Purpose: Software for automated monitoring, collection and analysis of prices for marketplace products (Ozon, Wildberries).
 
-### 2. Функциональные возможности
-Парсинг карточек товаров Ozon (через Playwright) с обходом антибот-защиты (Variti).
-Парсинг карточек товаров Wildberries (через go-rod).
-Сохранение истории изменения цен в реляционной базе данных (PostgreSQL).
-Веб-интерфейс для просмотра графиков цен (Chart.js) и статистики.
-JWT-авторизация пользователей.
-Поддержка развертывания через Docker и Docker Compose.
-Возможность публикации во внешнюю сеть через CloudPub.
+![dashboard](screenshots/dashboard.png)
+_Managing the list of tracked URLs and product groups_
+![analitics](screenshots/analytics.png)
+_Visualization of price history and product statistics_
 
-### 3. Требования к системе
-Язык программирования: Go 1.23+
-СУБД: PostgreSQL 16+
-Среда выполнения браузера: Chromium / Google Chrome, Node.js (для Playwright)
-Контейнеризация: Docker, Docker Compose
+```
+For a quick local start
+git clone https://github.com/Miroku777/goprxveil.git
+cd goprxveil
+Create it .env file (example in section 4)
+make migrate-up
+make run
+```
 
-### 4. Установка и запуск (Docker)
-Развертывание осуществляется с помощью Docker Compose.
+### 1. Program description
+The program is a web service consisting of a parser (scraper) and an analytics panel. It provides background price updates at specified URLs and provides an interface for visualizing price history, tracking minimum/maximum values, and obtaining seller data.
 
-1. Создать файл .env в корневой директории проекта и задать переменные:
+### 2. Functional features
+Parsing Ozon product cards (via Playwright) with anti-bot protection (Variti) bypass. Parsing Wildberries product cards (via go-rod). Storing price change history in a relational database (PostgreSQL). A web interface for viewing price charts (Chart.js) and statistics. JWT-based user authorization. Support for deployment via Docker and Docker Compose.
+
+### 3. System requirements
+Programming language: Go 1.27+
+DBMS: PostgreSQL 16+
+Browser runtime: Chromium / Google Chrome, Node.js (for Playwright)
+Containerization: Docker, Docker Compose
+Utilities: git, as well as make and Linux (for local startup)
+
+### 4. Installation and launch (Docker)
+The deployment is done using Docker Compose.
+
+1. Create a file .env in the root directory of the project and set the variables:
 `DB_USER=prxveil`
 `DB_PASSWORD=password`
 `DB_NAME=prxveil_db`
-2. Выполнить сборку и запуск контейнеров:
+2. Build and launch containers:
 `docker compose up -d --build`
-Сервис будет доступен по адресу http://localhost:8888. Панель pgAdmin доступна на порту 5050.
-3. Для публикации во внешнюю сеть используется утилита CloudPub:
-`./clo publish http 8888`
+The service will be available at http://localhost:8888 . The pgAdmin panel is available on port 5050.
+(in case of errors, it is recommended to run the application locally section 5)
 
-### 5. Установка и запуск (Локально)
-1. Установить зависимости Go:
+### 5. Installation and Launch (Locally)
+1. Install Go Dependencies:
 `go mod download`
-2. Установить драйверы для Playwright и зависимости браузера:
+2. Install drivers for Playwright and browser dependencies:
 `go run github.com/mxschmitt/playwright-go/cmd/playwright@v0.6401.0 install --with-deps`
-3. Применить миграции базы данных: 
+3. Apply database migrations:
 `migrate-up | migrate-down`
-4. Запустить приложение:
+4. Launch the app:
 `make run`
 
-### 6. Переменные окружения
-Переменная	               Описание	                          Пример
-DB_USER	                   Имя пользователя PostgreSQL	      prxveil
-DB_PASSWORD	               Пароль пользователя PostgreSQL	  secret
-DB_NAME	                   Имя базы данных	                  prxveil_db
-DB_HOST	                   Хост базы данных	                  localhost (или postgres в Docker)
+### 6. Environment variables .env
 
-### 7. Структура проекта
+| Variable | Description | Example |
+| :--- | :---: | ---: |               	                      
+| DB_USER | username PostgreSQL	| prxveil |
+| DB_PASSWORD | user password PostgreSQL | secret
+| DB_NAME | Database name | prxveil_db |
+| DB_HOST | Database Host | localhost (or postgres in Docker) |
+
+
+### 7. Project structure
+```
 .
 ├── cmd
 │   └── app
-│       └── main.go             # Точка входа в приложение
+│       └── main.go             # Application Entry point
 ├── internal
-│   ├── api                     # Маршрутизация HTTP (роутер)
-│   ├── browser                 # Инициализация браузеров (rod, playwright)
-│   ├── config                  # Конфигурация (БД, переменные окружения)
-│   ├── handlers                # HTTP-хендлеры (логин, дашборд, аналитика)
-│   ├── middleware              # JWT-авторизация и логирование
-│   ├── models                  # Структуры данных (сущности БД, ответы API)
-│   ├── parser                  # Парсеры маркетплейсов (Ozon, WB)
-│   └── storage                 # Работа с БД (SQL-запросы)
-├── migrations                  # SQL-скрипты для создания таблиц
-├── templates                   # Веб-интерфейс (HTML, CSS, JS)
-├── Dockerfile                  # Сборка Docker-образа
-├── docker-compose.yml          # Оркестрация контейнеров (app, db, pgadmin)
-└── Makefile                    # Команды для сборки и запуска
+│   ├── api                     # Routing HTTP
+│   ├── browser                 # Browser initialization (rod, playwright)
+│   ├── config                  # Configuration (database, environment variables)
+│   ├── handlers                # HTTP-handlers (login, dashboard, analytics)
+│   ├── middleware              # JWT-authorization and logging
+│   ├── models                  # Data structures (DB entities, API responses)
+│   ├── parser                  # Marketplace Parsers (Ozon, WB)
+│   └── storage                 # Working with databases (SQL queries)
+├── migrations                  # SQL scripts for creating tables
+├── templates                   # Web interface (HTML, CSS, JS)
+├── Dockerfile                  # Building a Docker image
+├── docker-compose.yml          # Container orchestration (app, db, pgadmin)
+└── Makefile                    # Commands for local build and launch
+```
 
-### 8. Особенности эксплуатации
-При первом запуске парсинга Ozon возможно появление капчи (защита Variti). Для стабильной работы требуется один раз пройти проверку в режиме видимого окна (локально), после чего файлы cookie сохраняются в директории ~/.ozon-mcp-userdata (или в Docker-томе ozon_data).
+### 8. Features of operation
+When you first start parsing Ozon, a captcha (Variti protection) may appear. For stable operation, it is required to be checked once in the visible window mode (locally), after which cookies are saved in the ~/.ozon-mcp-userdata directory (or in the ozon_data Docker volume).
 
-Приложение использует виртуальный дисплей (xvfb) для работы Playwright в среде без графического интерфейса.
-
-### 9. Лицензия
--
+_Note: Scraping may violate the terms of use of the websites. Use this tool responsibly._
