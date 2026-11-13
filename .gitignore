@@ -1,6 +1,7 @@
-./crd.env
-./sckretshEntity.txt
-./sckretsh.txt
-./hypothesis_test_for_scraping.go
-./clo
+crd.env
+.env
+sckretshEntity.txt
+sckretsh.txt
+hypothesis_test_for_scraping.go
+clo
 playwright-driver/
