@@ -6,7 +6,7 @@ let historyChartInstance = null;
 let sellersChartInstance = null;
 let currentAnalyticsData = null;
 
-const MAX_CHART_POINTS = 20;
+const MAX_CHART_POINTS = 50;
 
 const priceFormatter = new Intl.NumberFormat('ru-RU', {
     style: 'currency',

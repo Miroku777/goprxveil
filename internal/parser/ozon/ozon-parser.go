@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -21,6 +22,8 @@ import (
 var (
 	scraperInstance *OzonPlaywright
 	scraperMutex    sync.Mutex
+	ozonCount       int
+	ozonReset       time.Time
 )
 
 type OzonPlaywright struct {
@@ -28,6 +31,21 @@ type OzonPlaywright struct {
 	context    playwright.BrowserContext
 	page       playwright.Page
 	challenged bool
+}
+
+func waitOzonLimit() {
+	now := time.Now()
+	if now.After(ozonReset) {
+		ozonCount = 0
+		ozonReset = now.Add(time.Hour)
+	}
+	if ozonCount >= 50 { // limit to 50 requests per hour
+		wait := ozonReset.Sub(now)
+		time.Sleep(wait)
+		ozonCount = 0
+		ozonReset = time.Now().Add(time.Hour)
+	}
+	ozonCount++
 }
 
 // GetScraper returns the global OzonPlaywright instance.
@@ -120,6 +138,7 @@ func (o *OzonPlaywright) ensureContext() error {
 
 // GetPrice retrieves the price, product name, rating, and description from the Ozon API using the product ID.
 func (o *OzonPlaywright) fetchJson(path string) (text string, err error) {
+	waitOzonLimit()
 	if err = o.ensureContext(); err != nil {
 		return "", err
 	}
@@ -219,6 +238,7 @@ func (o *OzonPlaywright) GetPrice(productID string) (price int64, productName st
 	cleanPrice := regexp.MustCompile(`\D`).ReplaceAllString(priceStr, "")
 	price, err = strconv.ParseInt(cleanPrice, 10, 64)
 	if err != nil {
+		log.Println("invalid syntax GetPrice")
 		return 0, "", 0, "", err
 	}
 	price = price * 100
@@ -245,6 +265,7 @@ func extractProductID(urlstr string) (string, error) {
 // GetFullProductInfo navigates to the product page, extracts JSON-LD data from the DOM,
 // and returns the price, name, rating, and description.
 func (o *OzonPlaywright) GetFullProductInfo(productID string) (price int64, name string, rating float64, desc string, err error) {
+	waitOzonLimit()
 	if err := o.ensureContext(); err != nil {
 		return 0, "", 0, "", err
 	}
@@ -257,10 +278,17 @@ func (o *OzonPlaywright) GetFullProductInfo(productID string) (price int64, name
 		return 0, "", 0, "", err
 	}
 
-	time.Sleep(3 * time.Second) // waiting render
+	err = o.page.Locator(`script[type="application/ld+json"]`).WaitFor(playwright.LocatorWaitForOptions{
+		Timeout: playwright.Float(30000),
+		State:   playwright.WaitForSelectorStateAttached,
+	})
+	if err != nil {
+		return 0, "", 0, "", fmt.Errorf("JSON-LD clear: %w", err)
+	}
+
 	res, err := o.page.Evaluate(`() => document.querySelector('script[type="application/ld+json"]')?.innerText || ""`)
 	if err != nil || res == nil {
-		return 0, "", 0, "", errors.New("не удалось найти JSON-LD")
+		return 0, "", 0, "", errors.New("undefiend JSON-LD")
 	}
 
 	var data struct {
@@ -275,6 +303,9 @@ func (o *OzonPlaywright) GetFullProductInfo(productID string) (price int64, name
 	}
 
 	jsonText := res.(string)
+	if jsonText == "" {
+		return 0, "", 0, "", errors.New("JSON-LD empty")
+	}
 	if err := json.Unmarshal([]byte(jsonText), &data); err != nil {
 		return 0, "", 0, "", err
 	}
@@ -282,6 +313,8 @@ func (o *OzonPlaywright) GetFullProductInfo(productID string) (price int64, name
 	cleanPrice := regexp.MustCompile(`\D`).ReplaceAllString(data.Offers.Price, "")
 	price, err = strconv.ParseInt(cleanPrice, 10, 64)
 	if err != nil {
+		log.Println("invalid syntax GetFullProductInfo")
+
 		return 0, "", 0, "", err
 	}
 	price = price * 100
@@ -294,7 +327,10 @@ func (o *OzonPlaywright) GetFullProductInfo(productID string) (price int64, name
 
 // ParseAll parses the full product information from the given URL and returns the product model along with its price.
 func (w *OzonParser) ParseAll(urlstr string) (models.Product, int64, error) {
-	productID, _ := extractProductID(urlstr)
+	productID, err := extractProductID(urlstr)
+	if err != nil {
+		return models.Product{}, 0, err
+	}
 	scraper, err := GetScraper()
 	if err != nil {
 		fmt.Println("err start PLAYWRIGHT:", err)

@@ -15,9 +15,30 @@ import (
 	"github.com/Miroku77/goprxveil/internal/models"
 )
 
+var (
+	wbCount int
+	wbReset time.Time
+)
+
 type WBParser struct{}
 
+func waitWbLimit() {
+	now := time.Now()
+	if now.After(wbReset) {
+		wbCount = 0
+		wbReset = now.Add(time.Hour)
+	}
+	if wbCount >= 50 { // limit to 50 requests per hour
+		wait := wbReset.Sub(now)
+		time.Sleep(wait)
+		wbCount = 0
+		wbReset = time.Now().Add(time.Hour)
+	}
+	wbCount++
+}
+
 func (w *WBParser) ParseAll(urlstr string) (models.Product, int64, error) {
+	waitWbLimit()
 	page, cleanup, err := config.NewBrowserContext()
 	if err != nil {
 		return models.Product{}, 0, err
@@ -30,6 +51,7 @@ func (w *WBParser) ParseAll(urlstr string) (models.Product, int64, error) {
 }
 
 func (w *WBParser) ParsePrice(page *rod.Page, urlstr string) (int64, error) {
+	waitWbLimit()
 	if err := page.Navigate(urlstr); err != nil {
 		return 0, err
 	}
