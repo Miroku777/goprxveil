@@ -82,7 +82,7 @@ func DeleteByIdGroupHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// GET /api/urls?group_id={1} - accepts param id url and return list urls in group {"id":2, "url":"https://..."}
+// GET /api/urls?group_id={1} - accepts param id url and return list urls in group {"id": 2, "url": "https://...", "name": "product name", "active": true}
 //
 // POST /api/urls - accepts {"group_id":2, "url":"https://..."}, save url and return this id
 func ManipulateURLHandler(w http.ResponseWriter, r *http.Request) {

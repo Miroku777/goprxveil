@@ -143,6 +143,14 @@ async function toggleActive(id) {
     } catch (e) { console.error(e); }
 }
 
+function esc(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 function renderTable() {
     const tbody = document.getElementById('urlsTableBody');
     tbody.innerHTML = '';
@@ -157,18 +165,25 @@ function renderTable() {
             <td style="word-break: break-all; color: ${u.active ? 'var(--text-main)' : 'var(--text-muted)'};">
                 ${u.url}
             </td>
-            <td style="text-align: right;">
-                <button class="btn-icon ${u.active ? 'success' : ''}" onclick="toggleActive(${u.id})" title="${u.active ? 'Выключить' : 'Включить'}">
-                    ${u.active ? 'Вкл' : 'Выкл'}
-                </button>
-                <button class="btn-icon danger" onclick="deleteUrl(${u.id})" title="Удалить">✕</button>
+
+            <td style="font-weight: 500; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${esc(u.name || '')}">
+                ${u.name || '<span style="color:#94a3b8; font-weight: normal;">Парсинг...</span>'}
+            </td>
+
+            <td style="text-align: right; vertical-align: middle;">
+                <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                    <button class="btn-icon ${u.active ? 'success' : ''}" onclick="toggleActive(${u.id})" title="${u.active ? 'Выключить' : 'Включить'}">
+                        ${u.active ? 'Вкл' : 'Выкл'}
+                    </button>
+                    <button class="btn-icon danger" onclick="deleteUrl(${u.id})" title="Удалить">✕</button>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);
     });
 
     if (urls.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">Нет добавленных товаров</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Нет добавленных товаров</td></tr>';
     }
 }
 
