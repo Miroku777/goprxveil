@@ -92,7 +92,6 @@ func DeleteFromUrlById(db *sql.DB, urlId, groupId int) (err error) {
 	return tx.Commit()
 }
 
-// NOT REFACTOR
 // FindProductsByUrlid accepts url, return id product and struct analitics
 func FindProductsByUrlid(db *sql.DB, urlId int) (productId int, analitics models.Analitics, err error) {
 	err = db.QueryRow(`
@@ -102,14 +101,15 @@ func FindProductsByUrlid(db *sql.DB, urlId int) (productId int, analitics models
 	return productId, analitics, err
 }
 
-// NOT REFACTOR
-// FindPriceHistoryByProductId accepts id product, return current price and history price
-func FindPriceHistoryByProductId(db *sql.DB, productId int) (currentPrice string, history []models.ChartPoint, err error) {
+// FindPriceHistoryByProductId accepts productId and durationTime for visual chart,
+// returns currentPrice and history slice.
+func FindPriceHistoryByProductId(db *sql.DB, productId int, durationTime int) (currentPrice string, history []models.ChartPoint, err error) {
+	history = make([]models.ChartPoint, 0)
 	rows, err := db.Query(`
 		SELECT price, created_at FROM price_history 
-		WHERE product_id = $1 AND created_at >= CURRENT_DATE 
+		WHERE product_id = $1 AND created_at >= NOW() - ($2 * INTERVAL '1 days')
 		ORDER BY created_at ASC
-	`, productId)
+	`, productId, durationTime)
 	if err != nil {
 		return "", nil, err
 	}
@@ -127,7 +127,6 @@ func FindPriceHistoryByProductId(db *sql.DB, productId int) (currentPrice string
 	return currentPrice, history, rows.Err()
 }
 
-// NOT REFACTOR
 // UpdateActiveUrl reverse field active by id url
 func UpdateActiveUrl(db *sql.DB, urlId int) (err error) {
 	_, err = db.Exec(`UPDATE urls SET active = NOT active WHERE id = $1`, urlId)

@@ -10,9 +10,25 @@ import (
 	"github.com/Miroku77/goprxveil/internal/storage"
 )
 
-// GET /api/analytics/{id} - accepts id url, return all products {"seller_name":"", "name":"", "rating":"", "description":"", "options":"", "current_price":"", "history":""}
+// GET /api/analytics/{id}?days=10 - accepts id url and durationTime, return all products {"seller_name":"", "name":"", "rating":"", "description":"", "options":"", "current_price":"", "history":""}
 func GetAnalyticsHandler(w http.ResponseWriter, r *http.Request) {
 	idUrl, err := strconv.Atoi(strings.TrimPrefix(r.URL.Path, "/api/analytics/"))
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	dayStr := r.URL.Query().Get("days")
+	durationTime := 1
+	if dayStr != "" {
+		d, err := strconv.Atoi(dayStr)
+		if err != nil || d <= 0 {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		durationTime = d
+	}
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -21,10 +37,10 @@ func GetAnalyticsHandler(w http.ResponseWriter, r *http.Request) {
 	productId, analitics, err := storage.FindProductsByUrlid(db, idUrl)
 	if err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	currentPrice, history, err := storage.FindPriceHistoryByProductId(db, productId)
+	currentPrice, history, err := storage.FindPriceHistoryByProductId(db, productId, durationTime)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)

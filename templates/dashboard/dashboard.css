@@ -13,7 +13,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
 
 body { 
-    background: linear-gradient(135deg, #728def 0%, #2dd950 100%);
+    background-color: #f8fafc; 
     color: var(--text-main); 
     padding: 32px; 
     min-height: 100vh; 

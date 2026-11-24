@@ -6,7 +6,7 @@ let historyChartInstance = null;
 let sellersChartInstance = null;
 let currentAnalyticsData = null;
 
-const MAX_CHART_POINTS = 50;
+const MAX_CHART_POINTS = 5000;
 
 const priceFormatter = new Intl.NumberFormat('ru-RU', {
     style: 'currency',
@@ -93,10 +93,10 @@ async function onGroupChange() {
         if (urls.length === 0) {
             urlSelect.innerHTML = '<option value="" disabled selected>Нет товаров в группе</option>';
         } else {
-            urls.forEach(u => {
+            urls.forEach((u, index) => {
                 const opt = document.createElement('option');
                 opt.value = u.id;
-                opt.text = u.name;
+                opt.text = `#${index + 1} =>  ${u.name}`;
                 urlSelect.appendChild(opt);
             });
             
@@ -108,8 +108,9 @@ async function onGroupChange() {
 }
 
 async function loadAnalytics(idUrl) {
+    const period = document.getElementById('periodInput')?.value || 10;
     try {
-        const res = await apiFetch(`/api/analytics/${idUrl}`, { headers });
+        const res = await apiFetch(`/api/analytics/${idUrl}?days=${period}`, { headers });
         if (!res.ok) return;
         const data = await res.json();
         currentAnalyticsData = data; 
@@ -190,7 +191,7 @@ async function loadGroupComparison(groupId) {
         
         if (sellersChartInstance) sellersChartInstance.destroy();
         
-        const labels = data.map(item => item.name || 'Без имени');
+        const labels = data.map((item, index) => `#${index + 1}`);
         const prices = data.map(item => (parseFloat(item.price) || 0) / 100);
 
         const ctx = document.getElementById('sellersChart').getContext('2d');
@@ -207,9 +208,19 @@ async function loadGroupComparison(groupId) {
             },
             options: { 
                 responsive: true, maintainAspectRatio: false, 
-                plugins: { legend: { display: false } },
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                const index = context[0].dataIndex;
+                                return data[index].name;
+                            }
+                        }
+                    }
+                },
                 scales: { 
-                    x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } }, 
+                    x: { grid: { display: false }, ticks: { maxRotation: 0, minRotation: 0 } }, 
                     y: { grid: { color: 'rgba(0,0,0,0.05)' } } 
                 }
             }
@@ -217,13 +228,45 @@ async function loadGroupComparison(groupId) {
     } catch (e) { console.error(e); }
 }
 
+const daySeparatorPlugin = {
+    id: 'daySeparator',
+    beforeDatasetsDraw(chart) {
+        const { ctx, chartArea: { top, bottom }, scales: { x } } = chart;
+        const originalDates = chart.config.data.originalDates;
+        if (!originalDates) return;
+
+        ctx.save();
+        ctx.strokeStyle = '#cbd5e1';
+        ctx.lineWidth = 2;
+
+        for (let i = 1; i < originalDates.length; i++) {
+            const currentDate = new Date(originalDates[i]).toDateString();
+            const prevDate = new Date(originalDates[i - 1]).toDateString();
+            
+            if (currentDate !== prevDate) {
+                const xPos = x.getPixelForValue(i);
+                
+                ctx.beginPath();
+                ctx.moveTo(xPos, top);
+                ctx.lineTo(xPos, bottom);
+                ctx.stroke();
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = '12px "Plus Jakarta Sans", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom'; 
+                
+                const dateText = new Date(originalDates[i]).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+                
+                ctx.fillText(dateText, xPos, top - 10); 
+            }
+        }
+        ctx.restore();
+    }
+};
+
 function renderHistoryChart(history) {
     if (historyChartInstance) historyChartInstance.destroy();
-    
-    const dateEl = document.getElementById('chartDate');
-    if (dateEl) {
-        dateEl.innerText = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    }
 
     let chartData = history || [];
     if (chartData.length > MAX_CHART_POINTS) {
@@ -241,6 +284,7 @@ function renderHistoryChart(history) {
         type: 'line',
         data: {
             labels: labels,
+            originalDates: chartData.map(h => h.date),
             datasets: [{
                 label: 'Цена (₽)',
                 data: prices,
@@ -256,10 +300,14 @@ function renderHistoryChart(history) {
             }]
         },
         options: {
+            layout: {
+                padding: { top: 45 }
+            },
             responsive: true, maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,0.05)' } } }
-        }
+        },
+        plugins: [daySeparatorPlugin]
     });
 }
 

@@ -11,7 +11,7 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
 body { 
-    background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+    background-color: #f8fafc; 
     color: var(--text-main); padding: 32px; min-height: 100vh; 
 }
 
@@ -84,6 +84,44 @@ td { padding: 16px 8px; border-bottom: 1px solid rgba(0,0,0,0.05); }
 .best-price { background: rgba(16, 185, 129, 0.05); border-left: 3px solid var(--success); }
 .best-badge { background: var(--success); color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 10px; }
 .rating { color: #f59e0b; font-weight: bold; }
+
+/* Добавь это в конец файла со стилями */
+.chart-header {
+    display: flex;
+    justify-content: space-between; /* Раздвигает заголовок и инпут по краям */
+    align-items: center;
+    margin-bottom: 16px; /* Отступ до самого графика */
+}
+
+.chart-header h2 {
+    margin-bottom: 0; /* Убираем отступ у заголовка, чтобы он не прыгал */
+}
+
+.chart-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.chart-controls input {
+    width: 60px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: var(--input-bg);
+    font-family: inherit;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.chart-controls input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
 
 @media (max-width: 900px) { 
     .stat { grid-column: span 6; } 
