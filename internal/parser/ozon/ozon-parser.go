@@ -76,7 +76,7 @@ func GetScraper() (*OzonPlaywright, error) {
 		"--no-default-browser-check",
 		"--disable-extensions",
 		"--disable-background-networking",
-		// "--window-position=-32000,-32000", // Окно за экраном
+		// "--window-position=-32000,-32000",
 	}
 
 	browserPath := "/usr/bin/google-chrome"
@@ -84,7 +84,7 @@ func GetScraper() (*OzonPlaywright, error) {
 		browserPath = "/usr/bin/chromium"
 	}
 	context, err := pw.Chromium.LaunchPersistentContext(userDataDir, playwright.BrowserTypeLaunchPersistentContextOptions{
-		ExecutablePath: playwright.String(browserPath), // <-- ИСПОЛЬЗУЕМ АВТООПРЕДЕЛЕНИЕ
+		ExecutablePath: playwright.String(browserPath),
 		Headless:       playwright.Bool(false),
 		Args:           args,
 		Viewport:       &playwright.Size{Width: 1920, Height: 1080},
@@ -130,7 +130,7 @@ func (o *OzonPlaywright) ensureContext() error {
 
 	title, err := o.page.Title()
 	if err == nil && regexp.MustCompile(`(?i)antibot|ограничен|доступ|нет соединения`).MatchString(title) {
-		return fmt.Errorf("challenge не пройден, title: %s", title)
+		return fmt.Errorf("challenge not passed, title: %s", title)
 	}
 	o.challenged = true
 	return nil
@@ -171,7 +171,7 @@ func (o *OzonPlaywright) fetchJson(path string) (text string, err error) {
 		if status == 403 {
 			o.challenged = false
 		}
-		return "", fmt.Errorf("Ozon вернул HTTP %d", status)
+		return "", fmt.Errorf("return HTTP %d", status)
 	}
 	return text, nil
 }
